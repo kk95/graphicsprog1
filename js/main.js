@@ -4,8 +4,8 @@ This will help identify what button was clicked and what to draw
 */
 var b_line = false;
 var b_circle = false;
-//var b_ellipse = false;
-//var b_rectangle = false;
+var b_ellipse = false;
+var b_rectangle = false;
 //var b_polygon = false;
 //var b_polyline = false;
 
@@ -18,7 +18,6 @@ var line = document.getElementById('start_line');
 if(line){
 line.addEventListener('click', function() {
                     b_line = true;
-    
                       });
 }
 
@@ -26,11 +25,21 @@ var circle = document.getElementById('start_circle');
 if(circle){
 circle.addEventListener('click', function() {
                     b_circle = true;
+                      });
+}
+var ellipse = document.getElementById('start_ellipse');
+if(ellipse){
+ellipse.addEventListener('click', function() {
+                    b_ellipse = true;
     console.log('here');
                       });
 }
-//var ellipse = document.getElementById('start_ellipse');
-//var rectangle = document.getElementById('start_rectangle');
+var rectangle = document.getElementById('start_rectangle');
+if(rectangle){
+rectangle.addEventListener('click', function() {
+                    b_rectangle = true;
+                      });
+}
 //var polygon = document.getElementById('start_polygon');
 //var polyline = document.getElementById('start_polyline');
 
@@ -58,7 +67,7 @@ function clickM(event) {
     
   ctx.putImageData(imageData, 0, 0);
   
-  if (x1 == -1 && y1 == -1 && (b_line || b_circle)) {
+  if (x1 == -1 && y1 == -1 && (b_line || b_circle || b_rectangle || b_ellipse)) {
     x1 = x;
     y1 = y;
   
@@ -86,7 +95,33 @@ function clickM(event) {
         y1 = -1;
         y2 = -1;
         r = -1;
+        originX = -1;
+        originY = -1;
         
+    }
+    else if (b_rectangle)
+    {
+        b_rectangle = false;
+        rectangleDraw(x1, y1, x2, y2);
+        x1 = -1;
+        x2 = -1;
+        y1 = -1;
+        y2 = -1;
+        r = -1;
+        originX = -1;
+        originY = -1;
+    }
+    else if (b_ellipse)
+    {
+        b_ellipse = false;
+        ellipseDraw(x1, y1, x2, y2);
+        x1 = -1;
+        x2 = -1;
+        y1 = -1;
+        y2 = -1;
+        r = -1;
+        originX = -1;
+        originY = -1;
     }
       imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   }
@@ -137,7 +172,6 @@ function lineDraw (x1, y1, x2, y2)
     https://en.wikipedia.org/wiki/Midpoint_circle_algorithm
     modified algorithm at the wikipedia website
 */
-
 function circleDraw (x0, y0, radius)
 {
     
@@ -164,4 +198,74 @@ function circleDraw (x0, y0, radius)
         radiusError+= 2 * (y - x + 1);
     }
   }
+}
+
+/*
+    Fairly easy rectangle implementation   
+*/
+
+function rectangleDraw(x1, y1, x2, y2)
+{
+    lineDraw(x1, y1, x2, y1);
+    lineDraw(x2, y1, x2, y2);   
+    lineDraw(x2, y2, x1, y2);
+    lineDraw(x1, y2, x1, y1);
+}
+
+/*
+    I coudn't figure it out but after some googling found a similar answer to what I was looking for on stack overflow
+    Ellipse: https://stackoverflow.com/questions/15474122/is-there-a-midpoint-ellipse-algorithm
+*/
+function ellipsePlotPoints (xc, yc,  x,  y)
+{
+    pixelDraw(xc + x, yc + y);
+    pixelDraw(xc - x, yc + y);
+    pixelDraw(xc + x, yc - y);
+    pixelDraw(xc - x, yc - y);
+}
+
+function ellipseDraw(xc, yc,  a,  b)
+{
+    var a2 = a * a;
+    var b2 = b * b;
+    var twoa2 = 2 * a2;
+    var twob2 = 2 * b2;
+    var p;
+    var x = 0;
+    var y = b;
+    var px = 0;
+    var py = twoa2 * y;
+
+    /* Plot the initial point in each quadrant. */
+    ellipsePlotPoints (xc, yc, x, y);
+
+    /* Region 1 */
+    p = Math.round (b2 - (a2 * b) + (0.25 * a2));
+    while (px < py) {
+        x++;
+        px += twob2;
+        if (p < 0)
+        p += b2 + px;
+        else {
+        y--;
+        py -= twoa2;
+        p += b2 + px - py;
+        }
+        ellipsePlotPoints (xc,yc, x, y);
+    }
+
+    /* Region 2 */
+    p = Math.round (b2 * (x+0.5) * (x+0.5) + a2 * (y-1) * (y-1) - a2 * b2);
+    while (y > 0) {
+        y--;
+        py -= twoa2;
+        if (p > 0)
+        p += a2 - py;
+        else {
+        x++;
+        px += twob2;
+        p += a2 - py + px;
+        }
+        ellipsePlotPoints (xc,yc, x, y);
+    }
 }
