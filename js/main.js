@@ -6,8 +6,8 @@ var b_line = false;
 var b_circle = false;
 var b_ellipse = false;
 var b_rectangle = false;
-//var b_polygon = false;
-//var b_polyline = false;
+var b_polygon = false;
+var b_polyline = false;
 
 
 /*
@@ -40,9 +40,17 @@ rectangle.addEventListener('click', function() {
                     b_rectangle = true;
                       });
 }
-//var polygon = document.getElementById('start_polygon');
-//var polyline = document.getElementById('start_polyline');
+var polygon = document.getElementById('start_polygon');
+if(polygon){
+polygon.addEventListener('click', function() {
+                    b_polygon = true;
+                      });
+}
 
+var polyline = document.getElementById('start_polyline');
+polyline.addEventListener('click', function() {
+                    b_polyline = true;
+                      });
 
 /*
     Other variables that need to be used globally
@@ -67,7 +75,7 @@ function clickM(event) {
     
   ctx.putImageData(imageData, 0, 0);
   
-  if (x1 == -1 && y1 == -1 && (b_line || b_circle || b_rectangle || b_ellipse)) {
+  if (x1 == -1 && y1 == -1 && (b_line || b_circle || b_rectangle || b_ellipse || b_polygon || b_polyline)) {
     x1 = x;
     y1 = y;
   
@@ -122,6 +130,28 @@ function clickM(event) {
         r = -1;
         originX = -1;
         originY = -1;
+    }
+    else if (b_polygon)
+    {
+        if (originX == -1 && originY == -1){
+            //console.log('here');
+            originX = x1;
+            originY = y1;
+        }
+        lineDraw(x1, y1, x2, y2);
+        x1 = x2;
+        y1 = y2;
+    }
+     else if (b_polyline)
+    {
+        if (originX == -1 && originY == -1){
+            //console.log('here');
+            originX = x1;
+            originY = y1;
+        }
+        lineDraw(x1, y1, x2, y2);
+        x1 = x2;
+        y1 = y2;
     }
       imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   }
@@ -269,3 +299,70 @@ function ellipseDraw(xc, yc,  a,  b)
         ellipsePlotPoints (xc,yc, x, y);
     }
 }
+
+// Had to make an extra function for the polygon
+function mouseDouble() {
+    if (b_polygon) {
+        lineDraw(x1, y1, originX, originY);
+        x1 = -1;
+        x2 = -1;
+        y1 = -1;
+        y2 = -1;
+        r = -1;
+        originX = -1;
+        originY = -1;
+        b_polygon = false;
+        imageData = ctx.getImageData(0,0, canvas.width, canvas.height);
+    }
+    if (b_polyline){
+        x1 = -1;
+        x2 = -1;
+        y1 = -1;
+        y2 = -1;
+        r = -1;
+        originX = -1;
+        originY = -1;
+        b_polyline = false;
+    }
+}canvas.addEventListener('dblclick', mouseDouble);
+
+
+// impress me section, rubberbanding
+function rubber(event) {
+    var cord = coordMouse(event);
+    var x = cord.x;
+    var y = cord.y;
+    if(x1 != -1 && y1 != -1) {
+        //console.log('here');
+        x2 = x;
+        y2 = y
+    if(b_line){
+        ctx.putImageData(imageData, 0, 0);
+        lineDraw(x1, y1, x2, y2);
+    }
+        
+    else if(b_circle){
+        ctx.putImageData(imageData, 0, 0);
+        circleDraw(x1, y1,Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)));
+    }
+    else if(b_ellipse){
+        ctx.putImageData(imageData, 0, 0);
+        ellipseDraw(x1, y1, x2, y2);
+    }
+        
+    else if(b_rectangle){
+        ctx.putImageData(imageData, 0, 0);
+        rectangleDraw(x1, y1, x2, y2);
+    }
+    
+    else if(b_polygon){
+        ctx.putImageData(imageData, 0, 0);
+        lineDraw(x1, y1, x2, y2);
+    }
+    
+    else if(b_polyline){
+        ctx.putImageData(imageData, 0, 0);
+        lineDraw(x1, y1, x2, y2);
+    }
+    }
+}canvas.addEventListener('mousemove', rubber);
